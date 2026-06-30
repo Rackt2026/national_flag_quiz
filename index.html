@@ -861,6 +861,7 @@
 
     function startGame(mode) {
       clearAutoTimer();
+      hideJudge();
       quizMode = mode;
       deck = shuffleArray(COUNTRIES);
       currentIndex = 0;
@@ -975,6 +976,11 @@
       if (answerLocked) return;
       answerLocked = true;
 
+      const answerButtons = answerGrid.querySelectorAll("button");
+      answerButtons.forEach(btn => {
+        btn.disabled = true;
+      });
+
       if (selectedCountry.name === correctCountry.name) {
         correctCount++;
         button.classList.add("correct");
@@ -1040,7 +1046,7 @@
     }
 
     function showHint() {
-      if (!currentCountry) return;
+      if (!currentCountry || answerLocked) return;
       hintBox.textContent = `ヒント：${currentCountry.region}`;
       hintBox.classList.add("show");
       playSound("hint");
