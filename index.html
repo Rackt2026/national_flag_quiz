@@ -273,8 +273,7 @@
       min-height: 260px;
       border: 5px solid #fff;
       border-radius: 26px;
-      background:
-        linear-gradient(45deg, rgba(255,255,255,.65), rgba(255,255,255,.95));
+      background: linear-gradient(45deg, rgba(255,255,255,.65), rgba(255,255,255,.95));
       box-shadow:
         0 10px 0 rgba(25, 118, 210, 0.16),
         0 18px 28px rgba(0,0,0,.14);
@@ -460,7 +459,19 @@
       box-shadow: 0 7px 0 #d97706;
     }
 
-    .btn-next {
+    .btn-reset {
+      background: linear-gradient(180deg, #a7f3d0, #22c55e);
+      color: #07522b;
+      box-shadow: 0 7px 0 #14823d;
+    }
+
+    .btn-home {
+      background: linear-gradient(180deg, #e2e8f0, #94a3b8);
+      color: #233044;
+      box-shadow: 0 7px 0 #64748b;
+    }
+
+    .btn-main {
       background: linear-gradient(180deg, #ffd54f, #ff7a00);
       color: #fff;
       box-shadow: 0 8px 0 #c95b00;
@@ -483,18 +494,6 @@
         transform: scale(1);
         box-shadow: 0 10px 0 #c95b00, 0 0 0 rgba(255,122,0,0.0);
       }
-    }
-
-    .btn-reset {
-      background: linear-gradient(180deg, #a7f3d0, #22c55e);
-      color: #07522b;
-      box-shadow: 0 7px 0 #14823d;
-    }
-
-    .btn-home {
-      background: linear-gradient(180deg, #e2e8f0, #94a3b8);
-      color: #233044;
-      box-shadow: 0 7px 0 #64748b;
     }
 
     .judge-overlay {
@@ -580,11 +579,6 @@
       .btn {
         font-size: 14px;
         padding: 10px 8px;
-      }
-
-      .btn-next {
-        font-size: 18px;
-        padding: 14px 10px;
       }
 
       .stage-wrap {
@@ -712,9 +706,7 @@
         <div class="stage-wrap">
           <div class="stage">
             <p class="big-question" id="questionText">この国旗はどこの国？</p>
-
             <div id="mainDisplay"></div>
-
             <div class="answer-grid" id="answerGrid"></div>
           </div>
         </div>
@@ -728,7 +720,6 @@
 
           <div class="btn-row">
             <button type="button" class="btn btn-hint" id="hintBtn">ヒントを見る</button>
-            <button type="button" class="btn btn-next hidden" id="nextBtn">次の問題へ</button>
             <button type="button" class="btn btn-reset" id="restartBtn">最初から</button>
             <button type="button" class="btn btn-home" id="homeBtn">スタート画面へ</button>
           </div>
@@ -741,7 +732,7 @@
     <div class="result-card">
       <h1 class="result-title">おつかれさま！</h1>
       <p class="result-text" id="resultText">全部の問題が終わりました。</p>
-      <button type="button" class="btn btn-next" id="resultRestartBtn">もう一回あそぶ</button>
+      <button type="button" class="btn btn-main" id="resultRestartBtn">もう一回あそぶ</button>
       <button type="button" class="btn btn-home" id="resultHomeBtn">スタート画面へ</button>
     </div>
   </section>
@@ -772,7 +763,7 @@
       { name: "インドネシア", region: "アジア", image: "indonesia.jpg", group: "red-white-horizontal" },
       { name: "イラン", region: "アジア", image: "iran.jpg", group: "horizontal-tricolor" },
       { name: "アイルランド", region: "ヨーロッパ", image: "ireland.jpg", group: "vertical-tricolor" },
-      { name: "アイスランド", region: "ヨーロッパ", image: "island.jpg", group: "nordic-cross" },
+      { name: "アイスランド", region: "ヨーロッパ", image: "iceland.jpg", group: "nordic-cross" },
       { name: "イスラエル", region: "アジア", image: "israel.jpg", group: "blue-white" },
       { name: "イタリア", region: "ヨーロッパ", image: "italy.jpg", group: "vertical-tricolor" },
       { name: "日本", region: "アジア", image: "japan.jpg", group: "red-circle" },
@@ -824,7 +815,6 @@
     const message = document.getElementById("message");
     const hintBox = document.getElementById("hintBox");
     const hintBtn = document.getElementById("hintBtn");
-    const nextBtn = document.getElementById("nextBtn");
     const restartBtn = document.getElementById("restartBtn");
     const homeBtn = document.getElementById("homeBtn");
 
@@ -870,6 +860,7 @@
     }
 
     function startGame(mode) {
+      clearAutoTimer();
       quizMode = mode;
       deck = shuffleArray(COUNTRIES);
       currentIndex = 0;
@@ -893,7 +884,6 @@
 
       hintBox.classList.remove("show");
       hintBox.textContent = "";
-      nextBtn.classList.add("hidden");
       answerGrid.innerHTML = "";
       mainDisplay.innerHTML = "";
 
@@ -993,14 +983,23 @@
         showJudge("correct", "◯ 正解！");
         playSound("correct");
         launchConfetti();
-        autoTimer = setTimeout(nextQuestion, 1200);
+
+        autoTimer = setTimeout(() => {
+          currentIndex++;
+          createQuestion();
+        }, 1200);
+
       } else {
         button.classList.add("wrong");
         markCorrectAnswer(correctCountry);
         message.innerHTML = `おしい！<br>正解は「${correctCountry.name}」です。`;
         showJudge("wrong", "×");
         playSound("wrong");
-        nextBtn.classList.remove("hidden");
+
+        autoTimer = setTimeout(() => {
+          currentIndex++;
+          createQuestion();
+        }, 1000);
       }
     }
 
@@ -1024,12 +1023,10 @@
       }
     }
 
-    function nextQuestion() {
-      currentIndex++;
-      createQuestion();
-    }
-
     function showResult() {
+      clearAutoTimer();
+      hideJudge();
+
       const rate = Math.round((correctCount / QUESTION_COUNT) * 100);
       resultText.innerHTML = `
         ${QUESTION_COUNT}問すべて終わりました。<br>
@@ -1149,7 +1146,10 @@
       } catch (e) {}
     }
 
-    function resetGame() {
+    function resetGameWithConfirm() {
+      const ok = window.confirm("本当に最初の問題に戻りますか？");
+      if (!ok) return;
+
       startGame(quizMode);
     }
 
@@ -1160,11 +1160,10 @@
     }
 
     hintBtn.addEventListener("click", showHint);
-    nextBtn.addEventListener("click", nextQuestion);
-    restartBtn.addEventListener("click", resetGame);
+    restartBtn.addEventListener("click", resetGameWithConfirm);
     homeBtn.addEventListener("click", goHome);
 
-    resultRestartBtn.addEventListener("click", resetGame);
+    resultRestartBtn.addEventListener("click", resetGameWithConfirm);
     resultHomeBtn.addEventListener("click", goHome);
 
     startNameQuizBtn.addEventListener("click", () => startGame("name"));
