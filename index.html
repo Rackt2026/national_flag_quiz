@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>国旗と国名クイズ｜まなびやつばめ</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Hiragino Maru Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+      background:
+        radial-gradient(circle at 8% 12%, rgba(255,255,255,.75) 0 36px, transparent 38px),
+        radial-gradient(circle at 90% 18%, rgba(255,255,255,.65) 0 48px, transparent 50px),
+        radial-gradient(circle at 16% 88%, rgba(255,255,255,.65) 0 58px, transparent 60px),
+        linear-gradient(135deg, #fff7c2 0%, #b8f7ff 45%, #ffd6ef 100%);
+      color: #263044;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(circle, rgba(255, 193, 7, .32) 0 4px, transparent 5px),
+        radial-gradient(circle, rgba(25, 118, 210, .22) 0 4px, transparent 5px),
+        radial-gradient(circle, rgba(255, 92, 138, .22) 0 4px, transparent 5px);
+      background-size: 72px 72px, 98px 98px, 128px 128px;
+      background-position: 0 0, 35px 40px, 12px 70px;
+      opacity: .7;
+      z-index: -1;
+    }
+
+    .screen {
+      min-height: 100vh;
+      width: min(1080px, 96vw);
+      margin: 0 auto;
+      padding: 14px 0 22px;
+      text-align: center;
+    }
+
+    .hidden { display: none !important; }
+
+    .start-card,
+    .game-card,
+    .result-card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 4px solid #fff;
+      border-radius: 30px;
+      padding: 18px 16px;
+      box-shadow:
+        0 12px 0 rgba(255, 183, 77, 0.35),
+        0 18px 35px rgba(0, 0, 0, 0.12);
+    }
+
+    .start-card {
+      margin-top: 28px;
+      min-height: 74vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+    }
+
+    .logo-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border-radius: 28px;
+      padding: 16px;
+      border: 4px solid #87ddff;
+      box-shadow: 0 10px 0 rgba(25, 118, 210, 0.18);
+      transition: transform .18s ease;
+    }
+
+    .logo-link:hover { transform: translateY(-4px); }
+
+    .logo-link img {
+      max-width: min(310px, 74vw);
+      max-height: 150px;
+      object-fit: contain;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4.6vw, 48px);
+      color: #ff7a00;
+      letter-spacing: 0.06em;
+      text-shadow: 3px 3px 0 #fff1a8;
+      line-height: 1.22;
+    }
+
+    .start-title {
+      font-size: clamp(36px, 7vw, 66px);
+      color: #1976d2;
+      text-shadow: 3px 3px 0 #fff1a8;
+    }
+
+    .lead {
+      margin: 4px 0 0;
+      font-size: clamp(14px, 2.1vw, 18px);
+      font-weight: 900;
+      line-height: 1.7;
+      color: #475569;
+    }
+
+    .mode-select {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(210px, 1fr));
+      gap: 16px;
+      width: min(620px, 94%);
+      margin-top: 10px;
+    }
+
+    .mode-btn {
+      border: none;
+      border-radius: 24px;
+      padding: 22px 14px;
+      font-family: inherit;
+      font-weight: 900;
+      cursor: pointer;
+      color: #fff;
+      box-shadow: 0 8px 0 rgba(0,0,0,.18);
+      transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+    }
+
+    .mode-btn:hover { filter: brightness(1.04); }
+    .mode-btn:active { transform: translateY(5px); box-shadow: none; }
+
+    .mode-btn strong {
+      display: block;
+      font-size: clamp(24px, 4vw, 32px);
+      margin-bottom: 8px;
+    }
+
+    .mode-btn span {
+      display: block;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .mode-name {
+      background: linear-gradient(180deg, #ffb74d, #ff7a00);
+    }
+
+    .mode-flag {
+      background: linear-gradient(180deg, #8bd3ff, #1976d2);
+    }
+
+    .badge-row {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 3px solid #87ddff;
+      font-weight: 900;
+      color: #1976d2;
+    }
+
+    .game-card {
+      margin-top: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .game-card::before {
+      content: "★";
+      position: absolute;
+      top: 14px;
+      left: 18px;
+      color: #ffd54f;
+      font-size: 34px;
+      transform: rotate(-14deg);
+    }
+
+    .game-card::after {
+      content: "●";
+      position: absolute;
+      top: 18px;
+      right: 22px;
+      color: #81d4fa;
+      font-size: 30px;
+    }
+
+    .top-info {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 10px;
+      align-items: center;
+      margin: 12px 0 14px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .info-pill {
+      font-size: clamp(13px, 1.8vw, 16px);
+      font-weight: 900;
+      background: #fff;
+      border-radius: 999px;
+      padding: 8px 12px;
+      border: 3px solid #ffd54f;
+      box-shadow: 0 4px 0 rgba(255, 193, 7, 0.26);
+    }
+
+    .question-text {
+      color: #7b3fe4;
+      border-color: #c4a8ff;
+      box-shadow: 0 5px 0 rgba(126, 87, 194, 0.2);
+    }
+
+    .play-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 230px;
+      gap: 14px;
+      align-items: start;
+      position: relative;
+      z-index: 2;
+    }
+
+    .stage-wrap {
+      background: rgba(255, 255, 255, 0.82);
+      border-radius: 28px;
+      border: 4px solid #fff;
+      padding: 14px;
+      box-shadow: 0 15px 28px rgba(0, 0, 0, 0.12);
+      min-height: 470px;
+    }
+
+    .stage {
+      min-height: 440px;
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at 12% 15%, rgba(255,255,255,.9) 0 6px, transparent 7px),
+        radial-gradient(circle at 82% 22%, rgba(255,255,255,.9) 0 8px, transparent 9px),
+        radial-gradient(circle at 28% 80%, rgba(255,255,255,.75) 0 10px, transparent 11px),
+        linear-gradient(180deg, #e8fbff, #fff6d6);
+      position: relative;
+      overflow: hidden;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .big-question {
+      margin: 0;
+      font-size: clamp(24px, 4vw, 40px);
+      color: #7b3fe4;
+      font-weight: 900;
+      line-height: 1.35;
+      text-shadow: 2px 2px 0 #fff;
+    }
+
+    .flag-frame {
+      width: min(620px, 94%);
+      min-height: 260px;
+      border: 5px solid #fff;
+      border-radius: 26px;
+      background:
+        linear-gradient(45deg, rgba(255,255,255,.65), rgba(255,255,255,.95));
+      box-shadow:
+        0 10px 0 rgba(25, 118, 210, 0.16),
+        0 18px 28px rgba(0,0,0,.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .main-flag {
+      max-width: 100%;
+      max-height: 310px;
+      object-fit: contain;
+      border-radius: 12px;
+      filter: drop-shadow(0 10px 12px rgba(0,0,0,.18));
+    }
+
+    .country-name-display {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 110px;
+      padding: 18px 28px;
+      border-radius: 28px;
+      background: #ffffff;
+      border: 5px solid #ffd54f;
+      box-shadow:
+        0 10px 0 rgba(255, 193, 7, .25),
+        0 18px 28px rgba(0,0,0,.12);
+      color: #1976d2;
+      font-size: clamp(36px, 7vw, 72px);
+      font-weight: 900;
+      line-height: 1.15;
+      text-shadow: 2px 2px 0 #fff1a8;
+    }
+
+    .answer-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      width: min(760px, 98%);
+      margin: 0 auto;
+    }
+
+    .answer-btn {
+      min-height: 64px;
+      border: 4px solid #fff;
+      border-radius: 22px;
+      padding: 10px;
+      font-family: inherit;
+      font-weight: 900;
+      font-size: clamp(18px, 3vw, 28px);
+      color: #263044;
+      background: linear-gradient(180deg, #ffffff, #fff3c4);
+      box-shadow: 0 7px 0 rgba(255, 122, 0, .25);
+      cursor: pointer;
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    }
+
+    .answer-btn:hover { filter: brightness(1.04); }
+    .answer-btn:active { transform: translateY(5px); box-shadow: none; }
+
+    .flag-choice {
+      min-height: 170px;
+      border: 4px solid #fff;
+      border-radius: 24px;
+      padding: 10px;
+      background: linear-gradient(180deg, #ffffff, #e9f8ff);
+      box-shadow: 0 7px 0 rgba(25, 118, 210, .18);
+      cursor: pointer;
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .flag-choice:hover { filter: brightness(1.04); }
+    .flag-choice:active { transform: translateY(5px); box-shadow: none; }
+
+    .flag-choice img {
+      width: 100%;
+      height: 140px;
+      object-fit: contain;
+      border-radius: 10px;
+      filter: drop-shadow(0 6px 8px rgba(0,0,0,.16));
+    }
+
+    .choice-number {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: #fff1a8;
+      border: 3px solid #ffb74d;
+      color: #ff7a00;
+      font-weight: 900;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+    }
+
+    .correct {
+      background: linear-gradient(180deg, #d9ffe5, #64d989) !important;
+      border-color: #22c55e !important;
+    }
+
+    .wrong {
+      background: linear-gradient(180deg, #ffe2e2, #ff8a8a) !important;
+      border-color: #ef4444 !important;
+    }
+
+    .control-panel {
+      background: rgba(255,255,255,.88);
+      border: 4px solid #fff;
+      border-radius: 24px;
+      padding: 12px;
+      box-shadow: 0 12px 24px rgba(0,0,0,.1);
+      position: sticky;
+      top: 16px;
+    }
+
+    .message {
+      min-height: 86px;
+      padding: 10px;
+      border-radius: 18px;
+      background: #ffffff;
+      border: 3px solid #f5b7ff;
+      color: #b000bd;
+      font-weight: 900;
+      line-height: 1.5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+      font-size: 15px;
+    }
+
+    .hint-box {
+      min-height: 68px;
+      padding: 10px;
+      border-radius: 18px;
+      background: #fff9db;
+      border: 3px solid #ffd54f;
+      color: #9a5a00;
+      font-weight: 900;
+      line-height: 1.5;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    .hint-box.show {
+      display: flex;
+    }
+
+    .btn-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      padding: 12px 10px;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+      font-family: inherit;
+    }
+
+    .btn:active { transform: translateY(4px); box-shadow: none; }
+
+    .btn-hint {
+      background: linear-gradient(180deg, #fff59d, #fbbf24);
+      color: #6b3d00;
+      box-shadow: 0 7px 0 #d97706;
+    }
+
+    .btn-next {
+      background: linear-gradient(180deg, #ffd54f, #ff7a00);
+      color: #fff;
+      box-shadow: 0 8px 0 #c95b00;
+      font-size: 20px;
+      padding: 16px 12px;
+      border: 4px solid #fff3b0;
+      animation: pulseMainButton 1.6s infinite;
+    }
+
+    @keyframes pulseMainButton {
+      0% {
+        transform: scale(1);
+        box-shadow: 0 10px 0 #c95b00, 0 0 0 rgba(255,122,0,0.0);
+      }
+      50% {
+        transform: scale(1.03);
+        box-shadow: 0 10px 0 #c95b00, 0 0 22px rgba(255,122,0,0.45);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 10px 0 #c95b00, 0 0 0 rgba(255,122,0,0.0);
+      }
+    }
+
+    .btn-reset {
+      background: linear-gradient(180deg, #a7f3d0, #22c55e);
+      color: #07522b;
+      box-shadow: 0 7px 0 #14823d;
+    }
+
+    .btn-home {
+      background: linear-gradient(180deg, #e2e8f0, #94a3b8);
+      color: #233044;
+      box-shadow: 0 7px 0 #64748b;
+    }
+
+    .judge-overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,.18);
+      z-index: 9998;
+      pointer-events: none;
+    }
+
+    .judge-mark {
+      min-width: 250px;
+      padding: 26px 34px;
+      border: 6px solid #fff;
+      border-radius: 42px;
+      background: rgba(255,255,255,.96);
+      box-shadow: 0 14px 0 rgba(0,0,0,.12), 0 22px 36px rgba(0,0,0,.18);
+      font-size: clamp(54px, 12vw, 110px);
+      font-weight: 900;
+      text-align: center;
+      line-height: 1.1;
+      animation: judgePop .35s ease;
+    }
+
+    .judge-mark.correct-text { color: #16a34a; }
+    .judge-mark.wrong-text { color: #ef4444; }
+
+    @keyframes judgePop {
+      0% { transform: scale(.55) rotate(-8deg); opacity: 0; }
+      65% { transform: scale(1.12) rotate(3deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .confetti-piece {
+      position: fixed;
+      width: 11px;
+      height: 18px;
+      top: -24px;
+      z-index: 9999;
+      pointer-events: none;
+      border-radius: 4px;
+      animation: fall 1.35s linear forwards;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    .result-card {
+      margin-top: 48px;
+      min-height: 62vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+    }
+
+    .result-title {
+      font-size: clamp(36px, 7vw, 64px);
+      color: #ff7a00;
+      margin: 0;
+      text-shadow: 3px 3px 0 #fff1a8;
+    }
+
+    .result-text {
+      font-size: clamp(18px, 3vw, 28px);
+      font-weight: 900;
+      line-height: 1.7;
+      margin: 0;
+      color: #263044;
+    }
+
+    @media (max-width: 900px) {
+      .play-layout {
+        grid-template-columns: minmax(0, 1fr) 205px;
+      }
+
+      .btn {
+        font-size: 14px;
+        padding: 10px 8px;
+      }
+
+      .btn-next {
+        font-size: 18px;
+        padding: 14px 10px;
+      }
+
+      .stage-wrap {
+        min-height: 430px;
+      }
+
+      .stage {
+        min-height: 400px;
+      }
+
+      .flag-frame {
+        min-height: 230px;
+      }
+
+      .main-flag {
+        max-height: 260px;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .mode-select {
+        grid-template-columns: 1fr;
+      }
+
+      .top-info {
+        grid-template-columns: 1fr;
+      }
+
+      .play-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .control-panel {
+        position: static;
+      }
+
+      .stage-wrap {
+        min-height: auto;
+      }
+
+      .stage {
+        min-height: 520px;
+        padding: 14px;
+      }
+
+      .answer-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .flag-choice {
+        min-height: 145px;
+      }
+
+      .flag-choice img {
+        height: 118px;
+      }
+
+      .country-name-display {
+        font-size: clamp(32px, 10vw, 56px);
+        min-height: 92px;
+      }
+
+      .flag-frame {
+        width: 98%;
+        min-height: 220px;
+      }
+
+      .main-flag {
+        max-height: 250px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="judge-overlay" id="judgeOverlay">
+    <div class="judge-mark" id="judgeMark"></div>
+  </div>
+
+  <section class="screen" id="startScreen">
+    <div class="start-card">
+      <a class="logo-link" href="https://manabiya-tsubame.com/" target="_blank" rel="noopener noreferrer" aria-label="まなびやつばめ公式サイトへ">
+        <img src="rogo.png" alt="まなびやつばめ" />
+      </a>
+
+      <h1 class="start-title">国旗と国名クイズ</h1>
+
+      <p class="lead">
+        国旗を見て国名を答えたり、<br>
+        国名を見て正しい国旗を選んだりして、世界の国を楽しく覚えよう！
+      </p>
+
+      <div class="mode-select">
+        <button type="button" class="mode-btn mode-name" id="startNameQuizBtn">
+          <strong>国名を答える</strong>
+          <span>国旗の画像を見て、<br>正しい国名を選びます</span>
+        </button>
+
+        <button type="button" class="mode-btn mode-flag" id="startFlagQuizBtn">
+          <strong>国旗を選ぶ</strong>
+          <span>国名を見て、<br>正しい国旗を選びます</span>
+        </button>
+      </div>
+
+      <div class="badge-row">
+        <span class="badge">世界の国</span>
+        <span class="badge">国旗の形</span>
+        <span class="badge">地域の学習</span>
+      </div>
+    </div>
+  </section>
+
+  <main class="screen hidden" id="gameScreen">
+    <section class="game-card">
+      <h1>どこの国かな？</h1>
+      <p class="lead">よく見て、考えて、答えてみよう！ヒントも使えます。</p>
+
+      <div class="top-info">
+        <div class="info-pill" id="questionNumber">第1問 / 51問</div>
+        <div class="info-pill question-text" id="modeLabel">国旗を見て国名を答えよう</div>
+        <div class="info-pill" id="scoreText">正解：0問</div>
+      </div>
+
+      <div class="play-layout">
+        <div class="stage-wrap">
+          <div class="stage">
+            <p class="big-question" id="questionText">この国旗はどこの国？</p>
+
+            <div id="mainDisplay"></div>
+
+            <div class="answer-grid" id="answerGrid"></div>
+          </div>
+        </div>
+
+        <aside class="control-panel">
+          <div class="message" id="message">
+            まずはじっくり見て考えてみよう！
+          </div>
+
+          <div class="hint-box" id="hintBox"></div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn-hint" id="hintBtn">ヒントを見る</button>
+            <button type="button" class="btn btn-next hidden" id="nextBtn">次の問題へ</button>
+            <button type="button" class="btn btn-reset" id="restartBtn">最初から</button>
+            <button type="button" class="btn btn-home" id="homeBtn">スタート画面へ</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <section class="screen hidden" id="resultScreen">
+    <div class="result-card">
+      <h1 class="result-title">おつかれさま！</h1>
+      <p class="result-text" id="resultText">全部の問題が終わりました。</p>
+      <button type="button" class="btn btn-next" id="resultRestartBtn">もう一回あそぶ</button>
+      <button type="button" class="btn btn-home" id="resultHomeBtn">スタート画面へ</button>
+    </div>
+  </section>
+
+  <script>
+    const COUNTRIES = [
+      { name: "アメリカ", region: "北アメリカ", image: "america.jpg", group: "stars-stripes" },
+      { name: "アルゼンチン", region: "南アメリカ", image: "argentina.jpg", group: "blue-white" },
+      { name: "オーストラリア", region: "オセアニア", image: "australia.jpg", group: "union-jack-blue" },
+      { name: "オーストリア", region: "ヨーロッパ", image: "austria.jpg", group: "red-white-horizontal" },
+      { name: "バングラデシュ", region: "アジア", image: "bangladesh.jpg", group: "red-circle" },
+      { name: "ベルギー", region: "ヨーロッパ", image: "belgium.jpg", group: "vertical-tricolor" },
+      { name: "ブラジル", region: "南アメリカ", image: "brazil.jpg", group: "green-yellow" },
+      { name: "ブルガリア", region: "ヨーロッパ", image: "bulgaria.jpg", group: "horizontal-tricolor" },
+      { name: "カナダ", region: "北アメリカ", image: "canada.jpg", group: "red-white" },
+
+      { name: "チリ", region: "南アメリカ", image: "chile.jpg", group: "stars-stripes" },
+      { name: "中国", region: "アジア", image: "china.jpg", group: "red-star" },
+      { name: "デンマーク", region: "ヨーロッパ", image: "denmark.jpg", group: "nordic-cross" },
+      { name: "エジプト", region: "アフリカ", image: "egypt.jpg", group: "red-white-black" },
+      { name: "イングランド", region: "ヨーロッパ", image: "england.jpg", group: "red-white-cross" },
+      { name: "フィンランド", region: "ヨーロッパ", image: "finland.jpg", group: "nordic-cross" },
+      { name: "フランス", region: "ヨーロッパ", image: "france.jpg", group: "vertical-tricolor" },
+      { name: "ドイツ", region: "ヨーロッパ", image: "germany.jpg", group: "horizontal-tricolor" },
+      { name: "ギリシャ", region: "ヨーロッパ", image: "greece.jpg", group: "blue-white" },
+
+      { name: "インド", region: "アジア", image: "india.jpg", group: "horizontal-tricolor" },
+      { name: "インドネシア", region: "アジア", image: "indonesia.jpg", group: "red-white-horizontal" },
+      { name: "イラン", region: "アジア", image: "iran.jpg", group: "horizontal-tricolor" },
+      { name: "アイルランド", region: "ヨーロッパ", image: "ireland.jpg", group: "vertical-tricolor" },
+      { name: "アイスランド", region: "ヨーロッパ", image: "island.jpg", group: "nordic-cross" },
+      { name: "イスラエル", region: "アジア", image: "israel.jpg", group: "blue-white" },
+      { name: "イタリア", region: "ヨーロッパ", image: "italy.jpg", group: "vertical-tricolor" },
+      { name: "日本", region: "アジア", image: "japan.jpg", group: "red-circle" },
+      { name: "ケニア", region: "アフリカ", image: "kenya.jpg", group: "black-red-green" },
+
+      { name: "マレーシア", region: "アジア", image: "malaysia.jpg", group: "stars-stripes" },
+      { name: "メキシコ", region: "北アメリカ", image: "mexico.jpg", group: "vertical-tricolor" },
+      { name: "モナコ", region: "ヨーロッパ", image: "monaco.jpg", group: "red-white-horizontal" },
+      { name: "モンゴル", region: "アジア", image: "mongolia.jpg", group: "vertical-tricolor" },
+      { name: "オランダ", region: "ヨーロッパ", image: "netherlands.jpg", group: "horizontal-tricolor" },
+      { name: "ニュージーランド", region: "オセアニア", image: "new zealand.jpg", group: "union-jack-blue" },
+      { name: "北朝鮮", region: "アジア", image: "north korea.jpg", group: "red-blue-white" },
+      { name: "ノルウェー", region: "ヨーロッパ", image: "norway.jpg", group: "nordic-cross" },
+      { name: "パラオ", region: "オセアニア", image: "palau.jpg", group: "blue-yellow-circle" },
+
+      { name: "ペルー", region: "南アメリカ", image: "peru.jpg", group: "red-white" },
+      { name: "フィリピン", region: "アジア", image: "philippines.jpg", group: "stars-stripes" },
+      { name: "ポーランド", region: "ヨーロッパ", image: "poland.jpg", group: "red-white-horizontal" },
+      { name: "ポルトガル", region: "ヨーロッパ", image: "portugal.jpg", group: "green-red" },
+      { name: "ロシア", region: "ヨーロッパ・アジア", image: "russia.jpg", group: "horizontal-tricolor" },
+      { name: "スコットランド", region: "ヨーロッパ", image: "scotland.jpg", group: "blue-white-cross" },
+      { name: "シンガポール", region: "アジア", image: "singapore.jpg", group: "red-white-horizontal" },
+      { name: "韓国", region: "アジア", image: "south korea.jpg", group: "red-blue-circle" },
+      { name: "スペイン", region: "ヨーロッパ", image: "spain.jpg", group: "red-yellow" },
+
+      { name: "スウェーデン", region: "ヨーロッパ", image: "sweden.jpg", group: "nordic-cross" },
+      { name: "スイス", region: "ヨーロッパ", image: "switzerland.jpg", group: "red-white-cross" },
+      { name: "台湾", region: "アジア", image: "taiwan.jpg", group: "red-blue-white" },
+      { name: "タイ", region: "アジア", image: "thailand.jpg", group: "red-white-blue-horizontal" },
+      { name: "バチカン", region: "ヨーロッパ", image: "vatican.jpg", group: "yellow-white" },
+      { name: "ベトナム", region: "アジア", image: "vietnam.jpg", group: "red-star" }
+    ];
+
+    const QUESTION_COUNT = COUNTRIES.length;
+
+    const startScreen = document.getElementById("startScreen");
+    const gameScreen = document.getElementById("gameScreen");
+    const resultScreen = document.getElementById("resultScreen");
+
+    const startNameQuizBtn = document.getElementById("startNameQuizBtn");
+    const startFlagQuizBtn = document.getElementById("startFlagQuizBtn");
+
+    const questionNumber = document.getElementById("questionNumber");
+    const modeLabel = document.getElementById("modeLabel");
+    const scoreText = document.getElementById("scoreText");
+    const questionText = document.getElementById("questionText");
+    const mainDisplay = document.getElementById("mainDisplay");
+    const answerGrid = document.getElementById("answerGrid");
+    const message = document.getElementById("message");
+    const hintBox = document.getElementById("hintBox");
+    const hintBtn = document.getElementById("hintBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const homeBtn = document.getElementById("homeBtn");
+
+    const resultText = document.getElementById("resultText");
+    const resultRestartBtn = document.getElementById("resultRestartBtn");
+    const resultHomeBtn = document.getElementById("resultHomeBtn");
+
+    const judgeOverlay = document.getElementById("judgeOverlay");
+    const judgeMark = document.getElementById("judgeMark");
+
+    let quizMode = "name";
+    let deck = [];
+    let currentIndex = 0;
+    let correctCount = 0;
+    let currentCountry = null;
+    let answerLocked = false;
+    let autoTimer = null;
+
+    function showScreen(name) {
+      startScreen.classList.add("hidden");
+      gameScreen.classList.add("hidden");
+      resultScreen.classList.add("hidden");
+
+      if (name === "start") startScreen.classList.remove("hidden");
+      if (name === "game") gameScreen.classList.remove("hidden");
+      if (name === "result") resultScreen.classList.remove("hidden");
+    }
+
+    function shuffleArray(array) {
+      const copied = [...array];
+      for (let i = copied.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copied[i], copied[j]] = [copied[j], copied[i]];
+      }
+      return copied;
+    }
+
+    function clearAutoTimer() {
+      if (autoTimer) {
+        clearTimeout(autoTimer);
+        autoTimer = null;
+      }
+    }
+
+    function startGame(mode) {
+      quizMode = mode;
+      deck = shuffleArray(COUNTRIES);
+      currentIndex = 0;
+      correctCount = 0;
+      answerLocked = false;
+      showScreen("game");
+      createQuestion();
+    }
+
+    function createQuestion() {
+      clearAutoTimer();
+      hideJudge();
+
+      if (currentIndex >= deck.length) {
+        showResult();
+        return;
+      }
+
+      currentCountry = deck[currentIndex];
+      answerLocked = false;
+
+      hintBox.classList.remove("show");
+      hintBox.textContent = "";
+      nextBtn.classList.add("hidden");
+      answerGrid.innerHTML = "";
+      mainDisplay.innerHTML = "";
+
+      questionNumber.textContent = `第${currentIndex + 1}問 / ${QUESTION_COUNT}問`;
+      scoreText.textContent = `正解：${correctCount}問`;
+
+      if (quizMode === "name") {
+        modeLabel.textContent = "国旗を見て国名を答えよう";
+        questionText.textContent = "この国旗はどこの国？";
+
+        mainDisplay.innerHTML = `
+          <div class="flag-frame">
+            <img class="main-flag" src="${currentCountry.image}" alt="${currentCountry.name}の国旗">
+          </div>
+        `;
+
+        makeNameChoices(currentCountry);
+      }
+
+      if (quizMode === "flag") {
+        modeLabel.textContent = "国名を見て国旗を選ぼう";
+        questionText.textContent = "この国の国旗はどれ？";
+
+        mainDisplay.innerHTML = `
+          <div class="country-name-display">${currentCountry.name}</div>
+        `;
+
+        makeFlagChoices(currentCountry);
+      }
+
+      message.textContent = "まずはじっくり見て考えてみよう！";
+    }
+
+    function makeNameChoices(correctCountry) {
+      const choices = makeSimilarChoices(correctCountry, 3);
+
+      choices.forEach(country => {
+        const btn = document.createElement("button");
+        btn.className = "answer-btn";
+        btn.textContent = country.name;
+        btn.addEventListener("click", () => checkAnswer(btn, country, correctCountry));
+        answerGrid.appendChild(btn);
+      });
+    }
+
+    function makeFlagChoices(correctCountry) {
+      const choices = makeSimilarChoices(correctCountry, 3);
+
+      choices.forEach((country, index) => {
+        const btn = document.createElement("button");
+        btn.className = "flag-choice";
+        btn.setAttribute("aria-label", country.name);
+
+        btn.innerHTML = `
+          <div class="choice-number">${index + 1}</div>
+          <img src="${country.image}" alt="${country.name}の国旗">
+        `;
+
+        btn.addEventListener("click", () => checkAnswer(btn, country, correctCountry));
+        answerGrid.appendChild(btn);
+      });
+    }
+
+    function makeSimilarChoices(correctCountry, wrongCount) {
+      let wrongs = COUNTRIES.filter(c => c.name !== correctCountry.name && c.group === correctCountry.group);
+
+      if (wrongs.length < wrongCount) {
+        const sameRegion = COUNTRIES.filter(c =>
+          c.name !== correctCountry.name &&
+          c.region === correctCountry.region &&
+          !wrongs.some(w => w.name === c.name)
+        );
+        wrongs = [...wrongs, ...sameRegion];
+      }
+
+      if (wrongs.length < wrongCount) {
+        const others = COUNTRIES.filter(c =>
+          c.name !== correctCountry.name &&
+          !wrongs.some(w => w.name === c.name)
+        );
+        wrongs = [...wrongs, ...others];
+      }
+
+      const selectedWrongs = shuffleArray(wrongs).slice(0, wrongCount);
+      return shuffleArray([correctCountry, ...selectedWrongs]);
+    }
+
+    function checkAnswer(button, selectedCountry, correctCountry) {
+      if (answerLocked) return;
+      answerLocked = true;
+
+      if (selectedCountry.name === correctCountry.name) {
+        correctCount++;
+        button.classList.add("correct");
+        scoreText.textContent = `正解：${correctCount}問`;
+        message.innerHTML = `正解！<br>${correctCountry.name}の国旗です。`;
+        showJudge("correct", "◯ 正解！");
+        playSound("correct");
+        launchConfetti();
+        autoTimer = setTimeout(nextQuestion, 1200);
+      } else {
+        button.classList.add("wrong");
+        markCorrectAnswer(correctCountry);
+        message.innerHTML = `おしい！<br>正解は「${correctCountry.name}」です。`;
+        showJudge("wrong", "×");
+        playSound("wrong");
+        nextBtn.classList.remove("hidden");
+      }
+    }
+
+    function markCorrectAnswer(correctCountry) {
+      if (quizMode === "name") {
+        const buttons = answerGrid.querySelectorAll(".answer-btn");
+        buttons.forEach(btn => {
+          if (btn.textContent === correctCountry.name) {
+            btn.classList.add("correct");
+          }
+        });
+      }
+
+      if (quizMode === "flag") {
+        const buttons = answerGrid.querySelectorAll(".flag-choice");
+        buttons.forEach(btn => {
+          if (btn.getAttribute("aria-label") === correctCountry.name) {
+            btn.classList.add("correct");
+          }
+        });
+      }
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+      createQuestion();
+    }
+
+    function showResult() {
+      const rate = Math.round((correctCount / QUESTION_COUNT) * 100);
+      resultText.innerHTML = `
+        ${QUESTION_COUNT}問すべて終わりました。<br>
+        正解：${correctCount}問 ／ ${QUESTION_COUNT}問<br>
+        正答率：${rate}%<br>
+        世界の国旗をよく見られましたね！
+      `;
+      showScreen("result");
+      launchConfetti();
+      playSound("finish");
+    }
+
+    function showHint() {
+      if (!currentCountry) return;
+      hintBox.textContent = `ヒント：${currentCountry.region}`;
+      hintBox.classList.add("show");
+      playSound("hint");
+    }
+
+    function showJudge(type, text) {
+      judgeOverlay.style.display = "flex";
+      judgeMark.className = "judge-mark " + (type === "correct" ? "correct-text" : "wrong-text");
+      judgeMark.textContent = text;
+
+      judgeMark.style.animation = "none";
+      void judgeMark.offsetWidth;
+      judgeMark.style.animation = "";
+    }
+
+    function hideJudge() {
+      judgeOverlay.style.display = "none";
+      judgeMark.textContent = "";
+    }
+
+    function launchConfetti() {
+      const colors = ["#ff5c8a", "#ffd54f", "#4dd0e1", "#81c784", "#9575cd", "#ff8a65"];
+      for (let i = 0; i < 38; i++) {
+        const piece = document.createElement("div");
+        piece.className = "confetti-piece";
+        piece.style.left = Math.random() * 100 + "vw";
+        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDelay = Math.random() * 0.25 + "s";
+        piece.style.animationDuration = 1 + Math.random() * 0.65 + "s";
+        document.body.appendChild(piece);
+        setTimeout(() => piece.remove(), 1800);
+      }
+    }
+
+    function playSound(type) {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+
+        const ctx = new AudioContext();
+        const now = ctx.currentTime;
+        const gain = ctx.createGain();
+        gain.connect(ctx.destination);
+
+        if (type === "correct") {
+          const notes = [523.25, 659.25, 783.99];
+          notes.forEach((freq, index) => {
+            const osc = ctx.createOscillator();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, now + index * 0.08);
+            osc.connect(gain);
+            osc.start(now + index * 0.08);
+            osc.stop(now + index * 0.08 + 0.16);
+          });
+          gain.gain.setValueAtTime(0.14, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+          setTimeout(() => ctx.close(), 620);
+          return;
+        }
+
+        if (type === "wrong") {
+          const osc = ctx.createOscillator();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(190, now);
+          osc.frequency.exponentialRampToValueAtTime(110, now + 0.28);
+          osc.connect(gain);
+          gain.gain.setValueAtTime(0.13, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
+          osc.start(now);
+          osc.stop(now + 0.32);
+          setTimeout(() => ctx.close(), 440);
+          return;
+        }
+
+        if (type === "hint") {
+          const osc = ctx.createOscillator();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(660, now + 0.16);
+          osc.connect(gain);
+          gain.gain.setValueAtTime(0.09, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+          osc.start(now);
+          osc.stop(now + 0.25);
+          setTimeout(() => ctx.close(), 360);
+          return;
+        }
+
+        if (type === "finish") {
+          const notes = [523.25, 659.25, 783.99, 1046.5];
+          notes.forEach((freq, index) => {
+            const osc = ctx.createOscillator();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, now + index * 0.1);
+            osc.connect(gain);
+            osc.start(now + index * 0.1);
+            osc.stop(now + index * 0.1 + 0.2);
+          });
+          gain.gain.setValueAtTime(0.13, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+          setTimeout(() => ctx.close(), 820);
+        }
+      } catch (e) {}
+    }
+
+    function resetGame() {
+      startGame(quizMode);
+    }
+
+    function goHome() {
+      clearAutoTimer();
+      hideJudge();
+      showScreen("start");
+    }
+
+    hintBtn.addEventListener("click", showHint);
+    nextBtn.addEventListener("click", nextQuestion);
+    restartBtn.addEventListener("click", resetGame);
+    homeBtn.addEventListener("click", goHome);
+
+    resultRestartBtn.addEventListener("click", resetGame);
+    resultHomeBtn.addEventListener("click", goHome);
+
+    startNameQuizBtn.addEventListener("click", () => startGame("name"));
+    startFlagQuizBtn.addEventListener("click", () => startGame("flag"));
+  </script>
+</body>
+</html>
