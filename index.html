@@ -341,70 +341,6 @@
       text-shadow: 2px 2px 0 #fff1a8;
     }
 
-    .group-answer-area {
-      width: min(650px, 96%);
-      min-height: 112px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .group-answer-card {
-      width: 100%;
-      padding: 16px 20px;
-      border: 5px solid #b569e6;
-      border-radius: 26px;
-      color: #6f29a6;
-      background: linear-gradient(180deg, #fff, #f3ddff);
-      box-shadow:
-        0 9px 0 rgba(139,63,214,.2),
-        0 15px 25px rgba(0,0,0,.1);
-      animation: answerPop .28s ease;
-    }
-
-    .group-answer-label {
-      margin-bottom: 4px;
-      color: #b000bd;
-      font-size: 17px;
-      font-weight: 900;
-    }
-
-    .group-answer-name {
-      font-size: clamp(36px, 7vw, 68px);
-      font-weight: 900;
-      line-height: 1.15;
-      text-shadow: 2px 2px 0 #fff;
-    }
-
-    .group-answer-region {
-      display: inline-block;
-      margin-top: 8px;
-      padding: 5px 12px;
-      border: 3px solid #ffd54f;
-      border-radius: 999px;
-      color: #8c5400;
-      background: #fff9d6;
-      font-size: 15px;
-      font-weight: 900;
-    }
-
-    @keyframes answerPop {
-      0% {
-        opacity: 0;
-        transform: scale(.65);
-      }
-
-      70% {
-        opacity: 1;
-        transform: scale(1.06);
-      }
-
-      100% {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
     .answer-grid {
       width: min(760px, 98%);
       margin: 0 auto;
@@ -624,6 +560,79 @@
       font-size: 20px;
     }
 
+    /* みんなで学習用の正解ポップアップ */
+    .answer-popup {
+      position: absolute;
+      left: 50%;
+      top: 53%;
+      z-index: 100;
+      width: min(560px, 88%);
+      padding: 22px 18px;
+      border: 6px solid #b569e6;
+      border-radius: 30px;
+      background: rgba(255,255,255,.97);
+      box-shadow:
+        0 12px 0 rgba(139,63,214,.24),
+        0 24px 42px rgba(0,0,0,.28);
+      transform: translate(-50%, -50%);
+      text-align: center;
+      animation: answerPopup .28s ease;
+    }
+
+    .answer-popup::before {
+      content: "";
+      position: absolute;
+      inset: -20px;
+      z-index: -1;
+      border-radius: 38px;
+      background: rgba(255,255,255,.3);
+      backdrop-filter: blur(2px);
+    }
+
+    .answer-popup-label {
+      margin-bottom: 6px;
+      color: #b000bd;
+      font-size: clamp(17px, 2.4vw, 22px);
+      font-weight: 900;
+    }
+
+    .answer-popup-country {
+      color: #6f29a6;
+      font-size: clamp(42px, 8vw, 76px);
+      font-weight: 900;
+      line-height: 1.15;
+      text-shadow: 3px 3px 0 #f3ddff;
+    }
+
+    .answer-popup-region {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 16px;
+      border: 3px solid #ffd54f;
+      border-radius: 999px;
+      color: #8c5400;
+      background: #fff9d6;
+      font-size: clamp(14px, 2vw, 18px);
+      font-weight: 900;
+    }
+
+    @keyframes answerPopup {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(.65);
+      }
+
+      70% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.06);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
     .judge-overlay {
       position: fixed;
       inset: 0;
@@ -823,6 +832,12 @@
       .main-flag {
         max-height: 250px;
       }
+
+      .answer-popup {
+        top: 48%;
+        width: 92%;
+        padding: 18px 12px;
+      }
     }
   </style>
 </head>
@@ -922,7 +937,7 @@
 
       <div class="play-layout">
         <div class="stage-wrap">
-          <div class="stage">
+          <div class="stage" id="stage">
             <p class="big-question" id="questionText">
               この国旗はどこの国？
             </p>
@@ -932,10 +947,24 @@
             <div class="answer-grid" id="answerGrid"></div>
 
             <div
-              class="group-answer-area hidden"
-              id="groupAnswerArea"
+              class="answer-popup hidden"
+              id="answerPopup"
               aria-live="polite"
-            ></div>
+            >
+              <div class="answer-popup-label">
+                正解は……
+              </div>
+
+              <div
+                class="answer-popup-country"
+                id="popupCountry"
+              ></div>
+
+              <div
+                class="answer-popup-region"
+                id="popupRegion"
+              ></div>
+            </div>
           </div>
         </div>
 
@@ -1012,312 +1041,57 @@
 
   <script>
     const COUNTRIES = [
-      {
-        name: "アメリカ",
-        region: "北アメリカ",
-        image: "america.jpg",
-        group: "stars-stripes"
-      },
-      {
-        name: "アルゼンチン",
-        region: "南アメリカ",
-        image: "argentina.jpg",
-        group: "blue-white"
-      },
-      {
-        name: "オーストラリア",
-        region: "オセアニア",
-        image: "australia.jpg",
-        group: "union-jack-blue"
-      },
-      {
-        name: "オーストリア",
-        region: "ヨーロッパ",
-        image: "austria.jpg",
-        group: "red-white-horizontal"
-      },
-      {
-        name: "バングラデシュ",
-        region: "アジア",
-        image: "bangladesh.jpg",
-        group: "red-circle"
-      },
-      {
-        name: "ベルギー",
-        region: "ヨーロッパ",
-        image: "belgium.jpg",
-        group: "vertical-tricolor"
-      },
-      {
-        name: "ブラジル",
-        region: "南アメリカ",
-        image: "brazil.jpg",
-        group: "green-yellow"
-      },
-      {
-        name: "ブルガリア",
-        region: "ヨーロッパ",
-        image: "bulgaria.jpg",
-        group: "horizontal-tricolor"
-      },
-      {
-        name: "カナダ",
-        region: "北アメリカ",
-        image: "canada.jpg",
-        group: "red-white"
-      },
-      {
-        name: "チリ",
-        region: "南アメリカ",
-        image: "chile.jpg",
-        group: "stars-stripes"
-      },
-      {
-        name: "中国",
-        region: "アジア",
-        image: "china.jpg",
-        group: "red-star"
-      },
-      {
-        name: "デンマーク",
-        region: "ヨーロッパ",
-        image: "denmark.jpg",
-        group: "nordic-cross"
-      },
-      {
-        name: "エジプト",
-        region: "アフリカ",
-        image: "egypt.jpg",
-        group: "red-white-black"
-      },
-      {
-        name: "イギリス",
-        region: "ヨーロッパ",
-        image: "england.jpg",
-        group: "union-jack"
-      },
-      {
-        name: "フィンランド",
-        region: "ヨーロッパ",
-        image: "finland.jpg",
-        group: "nordic-cross"
-      },
-      {
-        name: "フランス",
-        region: "ヨーロッパ",
-        image: "france.jpg",
-        group: "vertical-tricolor"
-      },
-      {
-        name: "ドイツ",
-        region: "ヨーロッパ",
-        image: "germany.jpg",
-        group: "horizontal-tricolor"
-      },
-      {
-        name: "ギリシャ",
-        region: "ヨーロッパ",
-        image: "greece.jpg",
-        group: "blue-white"
-      },
-      {
-        name: "インド",
-        region: "アジア",
-        image: "india.jpg",
-        group: "horizontal-tricolor"
-      },
-      {
-        name: "インドネシア",
-        region: "アジア",
-        image: "indonesia.jpg",
-        group: "red-white-horizontal"
-      },
-      {
-        name: "イラン",
-        region: "アジア",
-        image: "iran.jpg",
-        group: "horizontal-tricolor"
-      },
-      {
-        name: "アイルランド",
-        region: "ヨーロッパ",
-        image: "ireland.jpg",
-        group: "vertical-tricolor"
-      },
-      {
-        name: "アイスランド",
-        region: "ヨーロッパ",
-        image: "iceland.jpg",
-        group: "nordic-cross"
-      },
-      {
-        name: "イスラエル",
-        region: "アジア",
-        image: "israel.jpg",
-        group: "blue-white"
-      },
-      {
-        name: "イタリア",
-        region: "ヨーロッパ",
-        image: "italy.jpg",
-        group: "vertical-tricolor"
-      },
-      {
-        name: "日本",
-        region: "アジア",
-        image: "japan.jpg",
-        group: "red-circle"
-      },
-      {
-        name: "ケニア",
-        region: "アフリカ",
-        image: "kenya.jpg",
-        group: "black-red-green"
-      },
-      {
-        name: "マレーシア",
-        region: "アジア",
-        image: "malaysia.jpg",
-        group: "stars-stripes"
-      },
-      {
-        name: "メキシコ",
-        region: "北アメリカ",
-        image: "mexico.jpg",
-        group: "vertical-tricolor"
-      },
-      {
-        name: "モナコ",
-        region: "ヨーロッパ",
-        image: "monaco.jpg",
-        group: "red-white-horizontal"
-      },
-      {
-        name: "モンゴル",
-        region: "アジア",
-        image: "mongolia.jpg",
-        group: "vertical-tricolor"
-      },
-      {
-        name: "オランダ",
-        region: "ヨーロッパ",
-        image: "netherlands.jpg",
-        group: "horizontal-tricolor"
-      },
-      {
-        name: "ニュージーランド",
-        region: "オセアニア",
-        image: "new zealand.jpg",
-        group: "union-jack-blue"
-      },
-      {
-        name: "北朝鮮",
-        region: "アジア",
-        image: "north korea.jpg",
-        group: "red-blue-white"
-      },
-      {
-        name: "ノルウェー",
-        region: "ヨーロッパ",
-        image: "norway.jpg",
-        group: "nordic-cross"
-      },
-      {
-        name: "パラオ",
-        region: "オセアニア",
-        image: "palau.jpg",
-        group: "blue-yellow-circle"
-      },
-      {
-        name: "ペルー",
-        region: "南アメリカ",
-        image: "peru.jpg",
-        group: "red-white"
-      },
-      {
-        name: "フィリピン",
-        region: "アジア",
-        image: "philippines.jpg",
-        group: "stars-stripes"
-      },
-      {
-        name: "ポーランド",
-        region: "ヨーロッパ",
-        image: "poland.jpg",
-        group: "red-white-horizontal"
-      },
-      {
-        name: "ポルトガル",
-        region: "ヨーロッパ",
-        image: "portugal.jpg",
-        group: "green-red"
-      },
-      {
-        name: "ロシア",
-        region: "ヨーロッパ・アジア",
-        image: "russia.jpg",
-        group: "horizontal-tricolor"
-      },
-      {
-        name: "スコットランド",
-        region: "ヨーロッパ",
-        image: "scotland.jpg",
-        group: "blue-white-cross"
-      },
-      {
-        name: "シンガポール",
-        region: "アジア",
-        image: "singapore.jpg",
-        group: "red-white-horizontal"
-      },
-      {
-        name: "韓国",
-        region: "アジア",
-        image: "south korea.jpg",
-        group: "red-blue-circle"
-      },
-      {
-        name: "スペイン",
-        region: "ヨーロッパ",
-        image: "spain.jpg",
-        group: "red-yellow"
-      },
-      {
-        name: "スウェーデン",
-        region: "ヨーロッパ",
-        image: "sweden.jpg",
-        group: "nordic-cross"
-      },
-      {
-        name: "スイス",
-        region: "ヨーロッパ",
-        image: "switzerland.jpg",
-        group: "red-white-cross"
-      },
-      {
-        name: "台湾",
-        region: "アジア",
-        image: "taiwan.jpg",
-        group: "red-blue-white"
-      },
-      {
-        name: "タイ",
-        region: "アジア",
-        image: "thailand.jpg",
-        group: "red-white-blue-horizontal"
-      },
-      {
-        name: "バチカン",
-        region: "ヨーロッパ",
-        image: "vatican.jpg",
-        group: "yellow-white"
-      },
-      {
-        name: "ベトナム",
-        region: "アジア",
-        image: "vietnam.jpg",
-        group: "red-star"
-      }
+      { name: "アメリカ", region: "北アメリカ", image: "america.jpg", group: "stars-stripes" },
+      { name: "アルゼンチン", region: "南アメリカ", image: "argentina.jpg", group: "blue-white" },
+      { name: "オーストラリア", region: "オセアニア", image: "australia.jpg", group: "union-jack-blue" },
+      { name: "オーストリア", region: "ヨーロッパ", image: "austria.jpg", group: "red-white-horizontal" },
+      { name: "バングラデシュ", region: "アジア", image: "bangladesh.jpg", group: "red-circle" },
+      { name: "ベルギー", region: "ヨーロッパ", image: "belgium.jpg", group: "vertical-tricolor" },
+      { name: "ブラジル", region: "南アメリカ", image: "brazil.jpg", group: "green-yellow" },
+      { name: "ブルガリア", region: "ヨーロッパ", image: "bulgaria.jpg", group: "horizontal-tricolor" },
+      { name: "カナダ", region: "北アメリカ", image: "canada.jpg", group: "red-white" },
+      { name: "チリ", region: "南アメリカ", image: "chile.jpg", group: "stars-stripes" },
+      { name: "中国", region: "アジア", image: "china.jpg", group: "red-star" },
+      { name: "デンマーク", region: "ヨーロッパ", image: "denmark.jpg", group: "nordic-cross" },
+      { name: "エジプト", region: "アフリカ", image: "egypt.jpg", group: "red-white-black" },
+      { name: "イギリス", region: "ヨーロッパ", image: "england.jpg", group: "union-jack" },
+      { name: "フィンランド", region: "ヨーロッパ", image: "finland.jpg", group: "nordic-cross" },
+      { name: "フランス", region: "ヨーロッパ", image: "france.jpg", group: "vertical-tricolor" },
+      { name: "ドイツ", region: "ヨーロッパ", image: "germany.jpg", group: "horizontal-tricolor" },
+      { name: "ギリシャ", region: "ヨーロッパ", image: "greece.jpg", group: "blue-white" },
+      { name: "インド", region: "アジア", image: "india.jpg", group: "horizontal-tricolor" },
+      { name: "インドネシア", region: "アジア", image: "indonesia.jpg", group: "red-white-horizontal" },
+      { name: "イラン", region: "アジア", image: "iran.jpg", group: "horizontal-tricolor" },
+      { name: "アイルランド", region: "ヨーロッパ", image: "ireland.jpg", group: "vertical-tricolor" },
+      { name: "アイスランド", region: "ヨーロッパ", image: "iceland.jpg", group: "nordic-cross" },
+      { name: "イスラエル", region: "アジア", image: "israel.jpg", group: "blue-white" },
+      { name: "イタリア", region: "ヨーロッパ", image: "italy.jpg", group: "vertical-tricolor" },
+      { name: "日本", region: "アジア", image: "japan.jpg", group: "red-circle" },
+      { name: "ケニア", region: "アフリカ", image: "kenya.jpg", group: "black-red-green" },
+      { name: "マレーシア", region: "アジア", image: "malaysia.jpg", group: "stars-stripes" },
+      { name: "メキシコ", region: "北アメリカ", image: "mexico.jpg", group: "vertical-tricolor" },
+      { name: "モナコ", region: "ヨーロッパ", image: "monaco.jpg", group: "red-white-horizontal" },
+      { name: "モンゴル", region: "アジア", image: "mongolia.jpg", group: "vertical-tricolor" },
+      { name: "オランダ", region: "ヨーロッパ", image: "netherlands.jpg", group: "horizontal-tricolor" },
+      { name: "ニュージーランド", region: "オセアニア", image: "new zealand.jpg", group: "union-jack-blue" },
+      { name: "北朝鮮", region: "アジア", image: "north korea.jpg", group: "red-blue-white" },
+      { name: "ノルウェー", region: "ヨーロッパ", image: "norway.jpg", group: "nordic-cross" },
+      { name: "パラオ", region: "オセアニア", image: "palau.jpg", group: "blue-yellow-circle" },
+      { name: "ペルー", region: "南アメリカ", image: "peru.jpg", group: "red-white" },
+      { name: "フィリピン", region: "アジア", image: "philippines.jpg", group: "stars-stripes" },
+      { name: "ポーランド", region: "ヨーロッパ", image: "poland.jpg", group: "red-white-horizontal" },
+      { name: "ポルトガル", region: "ヨーロッパ", image: "portugal.jpg", group: "green-red" },
+      { name: "ロシア", region: "ヨーロッパ・アジア", image: "russia.jpg", group: "horizontal-tricolor" },
+      { name: "スコットランド", region: "ヨーロッパ", image: "scotland.jpg", group: "blue-white-cross" },
+      { name: "シンガポール", region: "アジア", image: "singapore.jpg", group: "red-white-horizontal" },
+      { name: "韓国", region: "アジア", image: "south korea.jpg", group: "red-blue-circle" },
+      { name: "スペイン", region: "ヨーロッパ", image: "spain.jpg", group: "red-yellow" },
+      { name: "スウェーデン", region: "ヨーロッパ", image: "sweden.jpg", group: "nordic-cross" },
+      { name: "スイス", region: "ヨーロッパ", image: "switzerland.jpg", group: "red-white-cross" },
+      { name: "台湾", region: "アジア", image: "taiwan.jpg", group: "red-blue-white" },
+      { name: "タイ", region: "アジア", image: "thailand.jpg", group: "red-white-blue-horizontal" },
+      { name: "バチカン", region: "ヨーロッパ", image: "vatican.jpg", group: "yellow-white" },
+      { name: "ベトナム", region: "アジア", image: "vietnam.jpg", group: "red-star" }
     ];
 
     const QUESTION_COUNT = COUNTRIES.length;
@@ -1328,45 +1102,38 @@
 
     const startNameIndividualBtn =
       document.getElementById("startNameIndividualBtn");
+
     const startNameGroupBtn =
       document.getElementById("startNameGroupBtn");
+
     const startFlagQuizBtn =
       document.getElementById("startFlagQuizBtn");
 
     const gameLead = document.getElementById("gameLead");
-    const questionNumber =
-      document.getElementById("questionNumber");
+    const questionNumber = document.getElementById("questionNumber");
     const modeLabel = document.getElementById("modeLabel");
     const scoreText = document.getElementById("scoreText");
-    const questionText =
-      document.getElementById("questionText");
-    const mainDisplay =
-      document.getElementById("mainDisplay");
-    const answerGrid =
-      document.getElementById("answerGrid");
-    const groupAnswerArea =
-      document.getElementById("groupAnswerArea");
+    const questionText = document.getElementById("questionText");
+    const mainDisplay = document.getElementById("mainDisplay");
+    const answerGrid = document.getElementById("answerGrid");
+
+    const answerPopup = document.getElementById("answerPopup");
+    const popupCountry = document.getElementById("popupCountry");
+    const popupRegion = document.getElementById("popupRegion");
 
     const message = document.getElementById("message");
     const hintBox = document.getElementById("hintBox");
     const hintBtn = document.getElementById("hintBtn");
-    const showAnswerBtn =
-      document.getElementById("showAnswerBtn");
-    const restartBtn =
-      document.getElementById("restartBtn");
+    const showAnswerBtn = document.getElementById("showAnswerBtn");
+    const restartBtn = document.getElementById("restartBtn");
     const homeBtn = document.getElementById("homeBtn");
 
-    const resultText =
-      document.getElementById("resultText");
-    const resultRestartBtn =
-      document.getElementById("resultRestartBtn");
-    const resultHomeBtn =
-      document.getElementById("resultHomeBtn");
+    const resultText = document.getElementById("resultText");
+    const resultRestartBtn = document.getElementById("resultRestartBtn");
+    const resultHomeBtn = document.getElementById("resultHomeBtn");
 
-    const judgeOverlay =
-      document.getElementById("judgeOverlay");
-    const judgeMark =
-      document.getElementById("judgeMark");
+    const judgeOverlay = document.getElementById("judgeOverlay");
+    const judgeMark = document.getElementById("judgeMark");
 
     let quizMode = "nameIndividual";
     let deck = [];
@@ -1414,16 +1181,18 @@
       }
     }
 
+    function hideAnswerPopup() {
+      answerPopup.classList.add("hidden");
+      popupCountry.textContent = "";
+      popupRegion.textContent = "";
+    }
+
     function startGame(mode) {
       clearAutoTimer();
       hideJudge();
+      hideAnswerPopup();
 
       quizMode = mode;
-
-      /*
-        COUNTRIESを複製して1回だけシャッフルするため、
-        1問目から51問目まで同じ国は重複しません。
-      */
       deck = shuffleArray(COUNTRIES);
 
       currentIndex = 0;
@@ -1437,6 +1206,7 @@
     function createQuestion() {
       clearAutoTimer();
       hideJudge();
+      hideAnswerPopup();
 
       if (currentIndex >= deck.length) {
         showResult();
@@ -1451,8 +1221,6 @@
 
       answerGrid.innerHTML = "";
       mainDisplay.innerHTML = "";
-      groupAnswerArea.innerHTML = "";
-      groupAnswerArea.classList.add("hidden");
 
       showAnswerBtn.disabled = false;
 
@@ -1502,7 +1270,6 @@
           "この国旗はどこの国？";
 
         scoreText.style.display = "none";
-
         showAnswerBtn.classList.remove("hidden");
 
         mainDisplay.innerHTML = `
@@ -1614,11 +1381,6 @@
       correctCountry,
       wrongCount
     ) {
-      /*
-        最初に同じ模様グループから候補を探します。
-        足りない場合は同じ地域、
-        それでも足りない場合は全体から補充します。
-      */
       let wrongs = COUNTRIES.filter(country =>
         country.name !== correctCountry.name &&
         country.group === correctCountry.group
@@ -1716,10 +1478,6 @@
       showJudge("wrong", "×");
       playSound("wrong");
 
-      /*
-        不正解時は正解を表示した状態で1秒間静止し、
-        自動的に次の問題へ進みます。
-      */
       autoTimer = setTimeout(() => {
         currentIndex++;
         createQuestion();
@@ -1768,23 +1526,13 @@
       answerLocked = true;
       showAnswerBtn.disabled = true;
 
-      groupAnswerArea.classList.remove("hidden");
+      popupCountry.textContent =
+        currentCountry.name;
 
-      groupAnswerArea.innerHTML = `
-        <div class="group-answer-card">
-          <div class="group-answer-label">
-            正解は……
-          </div>
+      popupRegion.textContent =
+        currentCountry.region;
 
-          <div class="group-answer-name">
-            ${currentCountry.name}
-          </div>
-
-          <div class="group-answer-region">
-            ${currentCountry.region}
-          </div>
-        </div>
-      `;
+      answerPopup.classList.remove("hidden");
 
       message.innerHTML =
         `正解は「${currentCountry.name}」です！<br>2秒後に次の問題へ進みます。`;
@@ -1792,11 +1540,8 @@
       playSound("reveal");
       launchConfetti();
 
-      /*
-        みんなで学習用は、正解表示から
-        2秒後に自動で次の問題へ進みます。
-      */
       autoTimer = setTimeout(() => {
+        hideAnswerPopup();
         currentIndex++;
         createQuestion();
       }, 2000);
@@ -1805,6 +1550,7 @@
     function showResult() {
       clearAutoTimer();
       hideJudge();
+      hideAnswerPopup();
 
       if (quizMode === "nameGroup") {
         resultText.innerHTML = `
@@ -2137,16 +1883,13 @@
         return;
       }
 
-      /*
-        再びCOUNTRIESをシャッフルするため、
-        新しい順番で51問を重複なく出題します。
-      */
       startGame(quizMode);
     }
 
     function goHome() {
       clearAutoTimer();
       hideJudge();
+      hideAnswerPopup();
       showScreen("start");
     }
 
